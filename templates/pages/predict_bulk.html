@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Vexor — Prediccion Masiva{% endblock %}
+{% block page_title %}Prediccion Masiva{% endblock %}
+
+{% block content %}
+{% if not model_loaded %}
+<div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <span>No hay un modelo entrenado disponible. Contacta al administrador.</span>
+</div>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-12 col-lg-5">
+        <div class="vx-card reveal">
+            <div class="vx-card-header mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="vx-icon-box">
+                        <i class="bi bi-layers-fill"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0">Prediccion Masiva</h5>
+                        <small class="text-muted">Sube un archivo CSV o Excel</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="upload-zone" id="uploadZone">
+                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" class="d-none">
+                <div class="upload-icon mb-3">
+                    <i class="bi bi-cloud-upload-fill"></i>
+                </div>
+                <p class="mb-1">Arrastra tu archivo aqui</p>
+                <small class="text-muted">o haz clic para seleccionar</small>
+                <div class="mt-3" id="fileNameDisplay" style="display:none;">
+                    <span class="badge bg-primary" id="fileName"></span>
+                </div>
+            </div>
+
+            <button class="btn btn-primary w-100 mt-3" id="bulkPredictBtn" disabled>
+                <i class="bi bi-layers-fill me-2"></i>
+                Procesar Archivo
+            </button>
+
+            <div class="mt-3" id="progressContainer" style="display:none;">
+                <div class="d-flex justify-content-between mb-1">
+                    <small>Procesando...</small>
+                    <small id="progressText">0%</small>
+                </div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" id="progressBar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="vx-card reveal mt-4">
+            <div class="vx-card-header mb-3">
+                <h6 class="mb-0">Requisitos del archivo</h6>
+            </div>
+            <ul class="vx-checklist">
+                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Formato CSV, XLSX o XLS</li>
+                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Primera fila con nombres de columnas</li>
+                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Columnas compatibles con el modelo entrenado</li>
+                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Maximo 10 MB</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-7">
+        <div class="vx-card reveal" id="summaryCard" style="display:none !important;">
+            <div class="vx-card-header mb-4">
+                <h5 class="mb-0">Resumen de Resultados</h5>
+            </div>
+            <div class="row g-3 mb-4">
+                <div class="col-4">
+                    <div class="vx-stat-card">
+                        <div class="vx-stat-value" id="sumTotal">0</div>
+                        <div class="vx-stat-label">Total</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="vx-stat-card">
+                        <div class="vx-stat-value text-success" id="sumPositive">0</div>
+                        <div class="vx-stat-label">Positivos</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="vx-stat-card">
+                        <div class="vx-stat-value text-danger" id="sumNegative">0</div>
+                        <div class="vx-stat-label">Negativos</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <canvas id="bulkChart" height="80"></canvas>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0">Primeros resultados</h6>
+                <button class="btn btn-sm btn-outline-primary" id="exportBulkBtn">
+                    <i class="bi bi-download me-1"></i>Exportar CSV
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm vx-table" id="bulkTable">
+                    <thead id="bulkTableHead"></thead>
+                    <tbody id="bulkTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileNameDisplay = document.getElementById('fileNameDisplay');
+    const fileNameEl = document.getElementById('fileName');
+    const bulkPredictBtn = document.getElementById('bulkPredictBtn');
+    let selectedFile = null;
+    let bulkResults = [];
+
+    uploadZone.addEventListener('click', () => fileInput.click());
+
+    uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('drag-over');
+    });
+
+    uploadZone.addEventListener('dragleave', () => {
+        uploadZone.classList.remove('drag-over');
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file) setFile(file);
+    });
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files[0]) setFile(fileInput.files[0]);
+    });
+
+    function setFile(file) {
+        selectedFile = file;
+        fileNameEl.textContent = file.name;
+        fileNameDisplay.style.display = 'block';
+        bulkPredictBtn.disabled = false;
+    }
+
+    bulkPredictBtn.addEventListener('click', async () => {
+        if (!selectedFile) return;
+        bulkPredictBtn.disabled = true;
+        const progress = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        progress.style.display = 'block';
+
+        let pct = 0;
+        const interval = setInterval(() => {
+            pct = Math.min(pct + 5, 90);
+            progressBar.style.width = pct + '%';
+            progressText.textContent = pct + '%';
+        }, 150);
+
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        try {
+            const response = await fetch('/predict/bulk', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.detail || 'Error procesando el archivo');
+            }
+
+            const data = await response.json();
+            bulkResults = data.results;
+            clearInterval(interval);
+            progressBar.style.width = '100%';
+            progressText.textContent = '100%';
+            setTimeout(() => { progress.style.display = 'none'; }, 500);
+            showSummary(data);
+        } catch (err) {
+            clearInterval(interval);
+            progress.style.display = 'none';
+            alert(err.message);
+        } finally {
+            bulkPredictBtn.disabled = false;
+        }
+    });
+
+    function showSummary(data) {
+        const card = document.getElementById('summaryCard');
+        card.style.removeProperty('display');
+        document.getElementById('sumTotal').textContent = data.total;
+        document.getElementById('sumPositive').textContent = data.positive;
+        document.getElementById('sumNegative').textContent = data.negative;
+
+        const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+        new Chart(document.getElementById('bulkChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Positivos', 'Negativos'],
+                datasets: [{
+                    data: [data.positive, data.negative],
+                    backgroundColor: ['#22c55e', '#ef4444'],
+                    borderWidth: 0,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: isDark ? '#adb5bd' : '#6c757d' } }
+                }
+            }
+        });
+
+        const preview = data.results.slice(0, 10);
+        if (preview.length > 0) {
+            const keys = Object.keys(preview[0]);
+            const thead = document.getElementById('bulkTableHead');
+            const tbody = document.getElementById('bulkTableBody');
+            thead.innerHTML = '<tr>' + keys.map(k => `<th>${k}</th>`).join('') + '</tr>';
+            tbody.innerHTML = preview.map(row => {
+                return '<tr>' + keys.map(k => {
+                    let val = row[k];
+                    if (k === '_prediction') {
+                        val = val === 1
+                            ? '<span class="badge bg-success">Positivo</span>'
+                            : '<span class="badge bg-danger">Negativo</span>';
+                    } else if (k === '_probability') {
+                        val = (parseFloat(val) * 100).toFixed(1) + '%';
+                    }
+                    return `<td>${val}</td>`;
+                }).join('') + '</tr>';
+            }).join('');
+        }
+    }
+
+    document.getElementById('exportBulkBtn')?.addEventListener('click', () => {
+        if (!bulkResults.length) return;
+        const keys = Object.keys(bulkResults[0]);
+        const csv = [keys.join(','), ...bulkResults.map(row => keys.map(k => row[k]).join(','))].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'bulk_predictions.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+</script>
+{% endblock %}

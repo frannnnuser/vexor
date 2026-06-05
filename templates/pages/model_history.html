@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Vexor — Historial de Modelos{% endblock %}
+{% block page_title %}Historial de Modelos{% endblock %}
+
+{% block content %}
+<div class="vx-card reveal">
+    <div class="vx-card-header mb-4 d-flex align-items-center justify-content-between">
+        <div>
+            <h5 class="mb-0">Modelos Entrenados</h5>
+            <small class="text-muted">Comparativa de versiones y metricas</small>
+        </div>
+        <a href="/training/" class="btn btn-sm btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Nuevo Modelo
+        </a>
+    </div>
+
+    {% if models %}
+    <div class="table-responsive">
+        <table class="table vx-table mb-0">
+            <thead>
+                <tr>
+                    <th>Version</th>
+                    <th>Estado</th>
+                    <th>Accuracy</th>
+                    <th>F1 Score</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>Columna Objetivo</th>
+                    <th>Entrenado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for model in models %}
+                <tr {% if model.is_active %}class="table-active-row"{% endif %}>
+                    <td>
+                        <span class="font-mono">v{{ model.version }}</span>
+                        {% if model.is_active %}
+                        <span class="badge bg-success ms-1">Activo</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if model.is_active %}
+                        <i class="bi bi-circle-fill text-success small"></i>
+                        {% else %}
+                        <i class="bi bi-circle text-muted small"></i>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1" style="height: 4px; max-width: 50px;">
+                                <div class="progress-bar bg-primary" style="width: {{ (model.accuracy * 100)|round|int }}%"></div>
+                            </div>
+                            <small>{{ "%.2f"|format(model.accuracy * 100) }}%</small>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1" style="height: 4px; max-width: 50px;">
+                                <div class="progress-bar bg-success" style="width: {{ (model.f1_score * 100)|round|int }}%"></div>
+                            </div>
+                            <small>{{ "%.2f"|format(model.f1_score * 100) }}%</small>
+                        </div>
+                    </td>
+                    <td><small>{{ "%.2f"|format(model.precision * 100) }}%</small></td>
+                    <td><small>{{ "%.2f"|format(model.recall * 100) }}%</small></td>
+                    <td><span class="font-mono small">{{ model.target_column }}</span></td>
+                    <td><small class="text-muted">{{ model.trained_at }}</small></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-archive fs-2 d-block mb-2"></i>
+        <p>No hay modelos entrenados aun.</p>
+        <a href="/training/" class="btn btn-primary btn-sm">Entrenar primer modelo</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+</script>
+{% endblock %}

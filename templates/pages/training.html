@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}Vexor — Entrenar Modelo{% endblock %}
+{% block page_title %}Entrenar Modelo{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-12 col-lg-6">
+        <div class="vx-card reveal">
+            <div class="vx-card-header mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="vx-icon-box">
+                        <i class="bi bi-cpu-fill"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0">Entrenar Nuevo Modelo</h5>
+                        <small class="text-muted">Sube un dataset y selecciona la columna objetivo</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="upload-zone mb-4" id="uploadZone">
+                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" class="d-none">
+                <div class="upload-icon mb-3">
+                    <i class="bi bi-file-earmark-arrow-up-fill"></i>
+                </div>
+                <p class="mb-1">Arrastra tu dataset aqui</p>
+                <small class="text-muted">CSV, XLSX o XLS — max 10 MB</small>
+                <div class="mt-3" id="fileNameDisplay" style="display:none;">
+                    <span class="badge bg-primary" id="fileName"></span>
+                </div>
+            </div>
+
+            <div class="mb-4" id="columnSelector" style="display:none;">
+                <label class="form-label">Columna objetivo <span class="text-danger">*</span></label>
+                <select class="form-select" id="targetColumn">
+                    <option value="">Selecciona la columna a predecir</option>
+                </select>
+                <div class="form-text">Debe ser binaria (exactamente 2 valores unicos)</div>
+            </div>
+
+            <button class="btn btn-primary w-100" id="trainBtn" disabled>
+                <i class="bi bi-cpu-fill me-2"></i>
+                Iniciar Entrenamiento
+            </button>
+
+            <div class="mt-3" id="progressContainer" style="display:none;">
+                <div class="d-flex justify-content-between mb-1">
+                    <small>Entrenando modelo...</small>
+                    <small id="progressText">0%</small>
+                </div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" id="progressBar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+        <div class="vx-card reveal" id="metricsCard" style="display:none !important;">
+            <div class="vx-card-header mb-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0">Resultado del Entrenamiento</h5>
+                    <span class="badge bg-success">Exitoso</span>
+                </div>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-6">
+                    <div class="vx-metric-item">
+                        <div class="vx-metric-value" id="metAccuracy">-</div>
+                        <div class="vx-metric-label">Accuracy</div>
+                        <div class="progress mt-2" style="height: 4px;">
+                            <div class="progress-bar bg-primary" id="barAccuracy" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="vx-metric-item">
+                        <div class="vx-metric-value" id="metF1">-</div>
+                        <div class="vx-metric-label">F1 Score</div>
+                        <div class="progress mt-2" style="height: 4px;">
+                            <div class="progress-bar bg-success" id="barF1" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="vx-metric-item">
+                        <div class="vx-metric-value" id="metPrecision">-</div>
+                        <div class="vx-metric-label">Precision</div>
+                        <div class="progress mt-2" style="height: 4px;">
+                            <div class="progress-bar bg-warning" id="barPrecision" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="vx-metric-item">
+                        <div class="vx-metric-value" id="metRecall">-</div>
+                        <div class="vx-metric-label">Recall</div>
+                        <div class="progress mt-2" style="height: 4px;">
+                            <div class="progress-bar bg-info" id="barRecall" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="alert alert-success d-flex align-items-center gap-2 mb-0" id="trainMessage">
+                <i class="bi bi-check-circle-fill"></i>
+                <span id="trainMessageText"></span>
+            </div>
+        </div>
+
+        <div class="vx-card reveal {% if metricsCard %}mt-4{% endif %}">
+            <div class="vx-card-header mb-3">
+                <h6 class="mb-0">Proceso de entrenamiento</h6>
+            </div>
+            <ol class="vx-steps">
+                <li>Sube un archivo CSV o Excel con tus datos</li>
+                <li>Selecciona la columna que quieres predecir</li>
+                <li>El sistema detecta columnas numericas y categoricas automaticamente</li>
+                <li>Se aplica un pipeline de preprocesamiento y se entrena el modelo</li>
+                <li>Obtienes las metricas de evaluacion al finalizar</li>
+                <li>El nuevo modelo queda activo inmediatamente</li>
+            </ol>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileNameDisplay = document.getElementById('fileNameDisplay');
+    const fileNameEl = document.getElementById('fileName');
+    const columnSelector = document.getElementById('columnSelector');
+    const targetColumn = document.getElementById('targetColumn');
+    const trainBtn = document.getElementById('trainBtn');
+    let selectedFile = null;
+
+    uploadZone.addEventListener('click', () => fileInput.click());
+
+    uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('drag-over');
+    });
+
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('drag-over');
+        if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files[0]) setFile(fileInput.files[0]);
+    });
+
+    async function setFile(file) {
+        selectedFile = file;
+        fileNameEl.textContent = file.name;
+        fileNameDisplay.style.display = 'block';
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/training/detect-columns', {
+                method: 'POST',
+                body: formData,
+            });
+            const data = await response.json();
+            targetColumn.innerHTML = '<option value="">Selecciona la columna a predecir</option>' +
+                data.columns.map(c => `<option value="${c}">${c}</option>`).join('');
+            columnSelector.style.display = 'block';
+        } catch {
+            alert('Error al leer las columnas del archivo');
+        }
+    }
+
+    targetColumn.addEventListener('change', () => {
+        trainBtn.disabled = !targetColumn.value;
+    });
+
+    trainBtn.addEventListener('click', async () => {
+        if (!selectedFile || !targetColumn.value) return;
+        trainBtn.disabled = true;
+
+        const progress = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        progress.style.display = 'block';
+
+        let pct = 0;
+        const interval = setInterval(() => {
+            pct = Math.min(pct + 2, 90);
+            progressBar.style.width = pct + '%';
+            progressText.textContent = pct + '%';
+        }, 200);
+
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('target_column', targetColumn.value);
+
+        try {
+            const response = await fetch('/training/train', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.detail || 'Error en el entrenamiento');
+            }
+
+            const data = await response.json();
+            clearInterval(interval);
+            progressBar.style.width = '100%';
+            progressText.textContent = '100%';
+            setTimeout(() => { progress.style.display = 'none'; }, 500);
+            showMetrics(data);
+        } catch (err) {
+            clearInterval(interval);
+            progress.style.display = 'none';
+            alert(err.message);
+            trainBtn.disabled = false;
+        }
+    });
+
+    function showMetrics(data) {
+        const card = document.getElementById('metricsCard');
+        card.style.removeProperty('display');
+
+        const fmt = v => (v * 100).toFixed(2) + '%';
+        const pct = v => (v * 100).toFixed(0) + '%';
+
+        document.getElementById('metAccuracy').textContent = fmt(data.accuracy);
+        document.getElementById('metF1').textContent = fmt(data.f1_score);
+        document.getElementById('metPrecision').textContent = fmt(data.precision);
+        document.getElementById('metRecall').textContent = fmt(data.recall);
+
+        document.getElementById('barAccuracy').style.width = pct(data.accuracy);
+        document.getElementById('barF1').style.width = pct(data.f1_score);
+        document.getElementById('barPrecision').style.width = pct(data.precision);
+        document.getElementById('barRecall').style.width = pct(data.recall);
+
+        document.getElementById('trainMessageText').textContent = data.message + ' — Modelo v' + data.version;
+    }
+</script>
+{% endblock %}

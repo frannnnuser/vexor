@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{% block title %}Vexor{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+{% if user %}
+<div class="d-flex" id="wrapper">
+
+    <nav id="sidebar" class="sidebar d-flex flex-column">
+        <div class="sidebar-header d-flex align-items-center justify-content-between px-3 py-3">
+            <a class="sidebar-brand d-flex align-items-center gap-2 text-decoration-none" href="/dashboard">
+                <div class="brand-icon">
+                    <i class="bi bi-hexagon-fill"></i>
+                </div>
+                <span class="brand-name">Vexor</span>
+            </a>
+            <button class="btn btn-sm sidebar-toggle d-lg-none" id="sidebarClose">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="sidebar-user px-3 py-2 mb-2">
+            <div class="d-flex align-items-center gap-2">
+                <div class="user-avatar">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+                <div class="user-info">
+                    <div class="user-email">{{ user.email }}</div>
+                    <div class="user-role badge">{{ user.role }}</div>
+                </div>
+            </div>
+        </div>
+
+        <ul class="nav flex-column px-2 flex-grow-1">
+            <li class="nav-item">
+                <a class="nav-link {% if request.url.path.startswith('/dashboard') %}active{% endif %}" href="/dashboard">
+                    <i class="bi bi-grid-1x2-fill"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.url.path == '/predict/' %}active{% endif %}" href="/predict/">
+                    <i class="bi bi-lightning-fill"></i>
+                    <span>Prediccion Individual</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.url.path == '/predict/bulk' %}active{% endif %}" href="/predict/bulk">
+                    <i class="bi bi-layers-fill"></i>
+                    <span>Prediccion Masiva</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.url.path.startswith('/history') %}active{% endif %}" href="/history/">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Historial</span>
+                </a>
+            </li>
+            {% if user.role == 'admin' %}
+            <li class="nav-section-label px-2 mt-3 mb-1">Administracion</li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.url.path.startswith('/training') %}active{% endif %}" href="/training/">
+                    <i class="bi bi-cpu-fill"></i>
+                    <span>Entrenar Modelo</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.url.path == '/training/models' %}active{% endif %}" href="/training/models">
+                    <i class="bi bi-archive-fill"></i>
+                    <span>Historial de Modelos</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.url.path.startswith('/audit') %}active{% endif %}" href="/audit/">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Audit Log</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+
+        <div class="sidebar-footer px-3 py-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <a href="/auth/change-password" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-key-fill"></i>
+                </a>
+                <button class="btn btn-sm btn-outline-secondary" id="themeToggle" title="Cambiar tema">
+                    <i class="bi bi-sun-fill" id="themeIcon"></i>
+                </button>
+                <a href="/auth/logout" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-box-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div id="content" class="flex-grow-1">
+        <nav class="topbar d-flex align-items-center justify-content-between px-4">
+            <button class="btn btn-sm sidebar-toggle" id="sidebarToggle">
+                <i class="bi bi-list"></i>
+            </button>
+            <div class="topbar-right d-flex align-items-center gap-3">
+                <span class="topbar-page">{% block page_title %}{% endblock %}</span>
+            </div>
+        </nav>
+
+        <main class="main-content px-4 py-4">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+</div>
+
+<div class="sidebar-overlay d-lg-none" id="sidebarOverlay"></div>
+
+{% else %}
+    {% block auth_content %}{% endblock %}
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarClose = document.getElementById('sidebarClose');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('show');
+            sidebarOverlay.classList.toggle('show');
+        });
+    }
+
+    if (sidebarClose) {
+        sidebarClose.addEventListener('click', () => {
+            sidebar.classList.remove('show');
+            sidebarOverlay.classList.remove('show');
+        });
+    }
+
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('show');
+            sidebarOverlay.classList.remove('show');
+        });
+    }
+
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const html = document.documentElement;
+
+    const savedTheme = localStorage.getItem('vexor-theme') || 'dark';
+    html.setAttribute('data-bs-theme', savedTheme);
+    if (themeIcon) {
+        themeIcon.className = savedTheme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+    }
+
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const current = html.getAttribute('data-bs-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-bs-theme', next);
+            localStorage.setItem('vexor-theme', next);
+            themeIcon.className = next === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+        });
+    }
+
+    const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
