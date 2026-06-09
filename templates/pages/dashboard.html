@@ -6,7 +6,7 @@
 {% block content %}
 <div class="row g-4 mb-4">
     <div class="col-6 col-lg-3">
-        <div class="vx-stat-card reveal">
+        <div class="vx-stat-card reveal reveal-delay-1">
             <div class="vx-stat-icon vx-stat-icon-primary">
                 <i class="bi bi-activity"></i>
             </div>
@@ -15,25 +15,25 @@
         </div>
     </div>
     <div class="col-6 col-lg-3">
-        <div class="vx-stat-card reveal">
+        <div class="vx-stat-card reveal reveal-delay-2">
             <div class="vx-stat-icon vx-stat-icon-success">
                 <i class="bi bi-check-circle-fill"></i>
             </div>
             <div class="vx-stat-value counter" data-target="{{ stats.positive }}">0</div>
-            <div class="vx-stat-label">Predicciones Positivas</div>
+            <div class="vx-stat-label">Positivas</div>
         </div>
     </div>
     <div class="col-6 col-lg-3">
-        <div class="vx-stat-card reveal">
+        <div class="vx-stat-card reveal reveal-delay-3">
             <div class="vx-stat-icon vx-stat-icon-danger">
                 <i class="bi bi-x-circle-fill"></i>
             </div>
             <div class="vx-stat-value counter" data-target="{{ stats.negative }}">0</div>
-            <div class="vx-stat-label">Predicciones Negativas</div>
+            <div class="vx-stat-label">Negativas</div>
         </div>
     </div>
     <div class="col-6 col-lg-3">
-        <div class="vx-stat-card reveal">
+        <div class="vx-stat-card reveal reveal-delay-4">
             <div class="vx-stat-icon vx-stat-icon-warning">
                 <i class="bi bi-percent"></i>
             </div>
@@ -44,22 +44,28 @@
 </div>
 
 {% if active_model %}
+
 <div class="row g-4 mb-4">
     <div class="col-12 col-lg-8">
         <div class="vx-card reveal">
-            <div class="vx-card-header mb-3">
-                <h6 class="mb-0">Tendencia de Predicciones (30 dias)</h6>
+            <div class="vx-card-header d-flex align-items-center justify-content-between mb-3">
+                <div>
+                    <h6 class="mb-0 fw-bold">Tendencia de Predicciones</h6>
+                    <small class="text-muted">Ultimos 30 dias</small>
+                </div>
+                <span class="badge bg-primary">30d</span>
             </div>
             <canvas id="trendChart" height="100"></canvas>
         </div>
     </div>
     <div class="col-12 col-lg-4">
-        <div class="vx-card reveal h-100">
+        <div class="vx-card reveal h-100 d-flex flex-column">
             <div class="vx-card-header mb-3">
-                <h6 class="mb-0">Tasa Positiva</h6>
+                <h6 class="mb-0 fw-bold">Tasa Positiva</h6>
+                <small class="text-muted">Gauge en tiempo real</small>
             </div>
-            <div class="d-flex align-items-center justify-content-center h-75">
-                <canvas id="gaugeChart" width="200" height="200"></canvas>
+            <div class="d-flex align-items-center justify-content-center flex-grow-1">
+                <canvas id="gaugeChart" width="220" height="220"></canvas>
             </div>
         </div>
     </div>
@@ -68,16 +74,34 @@
 <div class="row g-4 mb-4">
     <div class="col-12 col-lg-6">
         <div class="vx-card reveal">
-            <div class="vx-card-header mb-3">
-                <h6 class="mb-0">Distribucion de Probabilidades</h6>
+            <div class="vx-card-header d-flex align-items-center justify-content-between mb-3">
+                <div>
+                    <h6 class="mb-0 fw-bold">Distribucion de Probabilidades</h6>
+                    <small class="text-muted">Histograma por rangos</small>
+                </div>
             </div>
             <canvas id="distChart" height="120"></canvas>
         </div>
     </div>
     <div class="col-12 col-lg-6">
         <div class="vx-card reveal">
+            <div class="vx-card-header d-flex align-items-center justify-content-between mb-3">
+                <div>
+                    <h6 class="mb-0 fw-bold">Positivos vs Negativos</h6>
+                    <small class="text-muted">Distribucion total</small>
+                </div>
+            </div>
+            <canvas id="donutChart" height="120"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-12 col-lg-6">
+        <div class="vx-card reveal">
             <div class="vx-card-header mb-3">
-                <h6 class="mb-0">Matriz de Confusion</h6>
+                <h6 class="mb-0 fw-bold">Matriz de Confusion</h6>
+                <small class="text-muted">Evaluacion del modelo activo</small>
             </div>
             <div class="confusion-matrix">
                 <div class="cm-grid">
@@ -85,20 +109,20 @@
                     <div class="cm-label-top text-center">Pred. Positivo</div>
                     <div class="cm-label-top text-center">Pred. Negativo</div>
                     <div class="cm-label-side">Real Positivo</div>
-                    <div class="cm-cell cm-tp">
+                    <div class="cm-cell cm-tp vx-tooltip" data-tooltip="Verdadero Positivo: predijo positivo y era positivo">
                         <span class="cm-value">{{ confusion.tp }}</span>
                         <span class="cm-name">VP</span>
                     </div>
-                    <div class="cm-cell cm-fn">
+                    <div class="cm-cell cm-fn vx-tooltip" data-tooltip="Falso Negativo: predijo negativo pero era positivo">
                         <span class="cm-value">{{ confusion.fn }}</span>
                         <span class="cm-name">FN</span>
                     </div>
                     <div class="cm-label-side">Real Negativo</div>
-                    <div class="cm-cell cm-fp">
+                    <div class="cm-cell cm-fp vx-tooltip" data-tooltip="Falso Positivo: predijo positivo pero era negativo">
                         <span class="cm-value">{{ confusion.fp }}</span>
                         <span class="cm-name">FP</span>
                     </div>
-                    <div class="cm-cell cm-tn">
+                    <div class="cm-cell cm-tn vx-tooltip" data-tooltip="Verdadero Negativo: predijo negativo y era negativo">
                         <span class="cm-value">{{ confusion.tn }}</span>
                         <span class="cm-name">VN</span>
                     </div>
@@ -106,59 +130,90 @@
             </div>
         </div>
     </div>
+    <div class="col-12 col-lg-6">
+        <div class="vx-card reveal">
+            <div class="vx-card-header mb-3">
+                <h6 class="mb-0 fw-bold">Metricas del Modelo</h6>
+                <small class="text-muted">Radar comparativo</small>
+            </div>
+            <canvas id="radarChart" height="160"></canvas>
+        </div>
+    </div>
 </div>
 
 <div class="row g-4">
     <div class="col-12">
         <div class="vx-card reveal">
-            <div class="vx-card-header mb-3 d-flex align-items-center justify-content-between">
-                <h6 class="mb-0">Modelo Activo</h6>
-                <span class="badge bg-success">v{{ active_model.version }}</span>
+            <div class="vx-card-header mb-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="mb-0 fw-bold">Modelo Activo</h6>
+                    <small class="text-muted">Columna objetivo: <strong>{{ active_model.target_column }}</strong></small>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success">Activo</span>
+                    <span class="badge bg-secondary font-mono">v{{ active_model.version }}</span>
+                    <span class="badge {% if confidence == 'Alta' %}bg-success{% elif confidence == 'Media' %}bg-warning{% else %}bg-danger{% endif %}">
+                        Confianza {{ confidence }}
+                    </span>
+                </div>
             </div>
             <div class="row g-3">
                 <div class="col-6 col-md-3">
-                    <div class="vx-metric-item">
-                        <div class="vx-metric-value">{{ "%.2f"|format(active_model.accuracy * 100) }}%</div>
-                        <div class="vx-metric-label">Accuracy</div>
+                    <div class="vx-metric-item reveal-scale reveal-delay-1">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <span class="vx-metric-label">Accuracy</span>
+                            <span class="vx-tooltip" data-tooltip="Proporcion de predicciones correctas sobre el total">
+                                <i class="bi bi-info-circle text-muted small"></i>
+                            </span>
+                        </div>
+                        <div class="vx-metric-value text-primary">{{ "%.1f"|format(active_model.accuracy * 100) }}%</div>
                         <div class="progress mt-2" style="height: 4px;">
                             <div class="progress-bar bg-primary" style="width: {{ active_model.accuracy * 100 }}%"></div>
                         </div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
-                    <div class="vx-metric-item">
-                        <div class="vx-metric-value">{{ "%.2f"|format(active_model.f1_score * 100) }}%</div>
-                        <div class="vx-metric-label">F1 Score</div>
+                    <div class="vx-metric-item reveal-scale reveal-delay-2">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <span class="vx-metric-label">F1 Score</span>
+                            <span class="vx-tooltip" data-tooltip="Media armonica entre precision y recall">
+                                <i class="bi bi-info-circle text-muted small"></i>
+                            </span>
+                        </div>
+                        <div class="vx-metric-value text-success">{{ "%.1f"|format(active_model.f1_score * 100) }}%</div>
                         <div class="progress mt-2" style="height: 4px;">
                             <div class="progress-bar bg-success" style="width: {{ active_model.f1_score * 100 }}%"></div>
                         </div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
-                    <div class="vx-metric-item">
-                        <div class="vx-metric-value">{{ "%.2f"|format(active_model.precision * 100) }}%</div>
-                        <div class="vx-metric-label">Precision</div>
+                    <div class="vx-metric-item reveal-scale reveal-delay-3">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <span class="vx-metric-label">Precision</span>
+                            <span class="vx-tooltip" data-tooltip="De los predichos positivos, cuantos eran realmente positivos">
+                                <i class="bi bi-info-circle text-muted small"></i>
+                            </span>
+                        </div>
+                        <div class="vx-metric-value text-warning">{{ "%.1f"|format(active_model.precision * 100) }}%</div>
                         <div class="progress mt-2" style="height: 4px;">
                             <div class="progress-bar bg-warning" style="width: {{ active_model.precision * 100 }}%"></div>
                         </div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
-                    <div class="vx-metric-item">
-                        <div class="vx-metric-value">{{ "%.2f"|format(active_model.recall * 100) }}%</div>
-                        <div class="vx-metric-label">Recall</div>
+                    <div class="vx-metric-item reveal-scale reveal-delay-4">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <span class="vx-metric-label">Recall</span>
+                            <span class="vx-tooltip" data-tooltip="De todos los positivos reales, cuantos fueron detectados">
+                                <i class="bi bi-info-circle text-muted small"></i>
+                            </span>
+                        </div>
+                        <div class="vx-metric-value text-info">{{ "%.1f"|format(active_model.recall * 100) }}%</div>
                         <div class="progress mt-2" style="height: 4px;">
                             <div class="progress-bar bg-info" style="width: {{ active_model.recall * 100 }}%"></div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="mt-3 d-flex align-items-center gap-2">
-                <small class="text-muted">Confianza del modelo:</small>
-                <span class="badge {% if confidence == 'Alta' %}bg-success{% elif confidence == 'Media' %}bg-warning{% else %}bg-danger{% endif %}">
-                    {{ confidence }}
-                </span>
-                <small class="text-muted ms-2">Columna objetivo: <strong>{{ active_model.target_column }}</strong></small>
             </div>
         </div>
     </div>
@@ -166,11 +221,9 @@
 
 {% else %}
 <div class="vx-card reveal text-center py-5">
-    <div class="vx-empty-icon mb-3">
-        <i class="bi bi-cpu"></i>
-    </div>
-    <h5>Sin modelo entrenado</h5>
-    <p class="text-muted">Aun no hay un modelo activo. Sube un dataset y entrena el primer modelo.</p>
+    <div class="vx-empty-icon mb-3"><i class="bi bi-cpu"></i></div>
+    <h5 class="fw-bold">Sin modelo entrenado</h5>
+    <p class="text-muted">Sube un dataset y entrena el primer modelo para ver el dashboard completo.</p>
     {% if user.role == 'admin' %}
     <a href="/training/" class="btn btn-primary mt-2">
         <i class="bi bi-cpu-fill me-2"></i>Entrenar Modelo
@@ -178,53 +231,53 @@
     {% endif %}
 </div>
 {% endif %}
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    const trendLabels = {{ trend.labels | tojson }};
-    const trendValues = {{ trend.values | tojson }};
-    const distLabels = {{ distribution.labels | tojson }};
-    const distValues = {{ distribution.values | tojson }};
+    const trendLabels = {{ trend['labels'] | tojson }};
+    const trendValues = {{ trend['values'] | tojson }};
+    const distLabels = {{ distribution['labels'] | tojson }};
+    const distValues = {{ distribution['values'] | tojson }};
     const positiveRate = {{ stats.positive_rate }};
+    const statsPositive = {{ stats.positive }};
+    const statsNegative = {{ stats.negative }};
 
-    document.querySelectorAll('.reveal').forEach(el => {
-        el.classList.add('visible');
-    });
+    {% if active_model %}
+    const modelMetrics = {
+        accuracy: {{ active_model.accuracy }},
+        f1: {{ active_model.f1_score }},
+        precision: {{ active_model.precision }},
+        recall: {{ active_model.recall }},
+    };
+    {% endif %}
 
     document.querySelectorAll('.counter').forEach(el => {
         const target = parseInt(el.dataset.target);
-        const duration = 1200;
+        if (target === 0) { el.textContent = '0'; return; }
+        const duration = 1400;
         const step = Math.ceil(target / (duration / 16));
         let current = 0;
         const timer = setInterval(() => {
-            current += step;
-            if (current >= target) {
-                current = target;
-                clearInterval(timer);
-            }
+            current = Math.min(current + step, target);
             el.textContent = current.toLocaleString();
+            if (current >= target) clearInterval(timer);
         }, 16);
     });
 
     const rateEl = document.getElementById('positiveRate');
     if (rateEl) {
         let current = 0;
-        const target = positiveRate;
         const timer = setInterval(() => {
-            current += 0.5;
-            if (current >= target) {
-                current = target;
-                clearInterval(timer);
-            }
+            current = Math.min(current + 0.5, positiveRate);
             rateEl.textContent = current.toFixed(1) + '%';
+            if (current >= positiveRate) clearInterval(timer);
         }, 16);
     }
 
     const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
     const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-    const textColor = isDark ? '#adb5bd' : '#6c757d';
+    const textColor = isDark ? '#525270' : '#9090b0';
 
     if (document.getElementById('trendChart')) {
         new Chart(document.getElementById('trendChart'), {
@@ -235,11 +288,12 @@
                     label: 'Predicciones',
                     data: trendValues,
                     borderColor: '#6366f1',
-                    backgroundColor: 'rgba(99,102,241,0.1)',
+                    backgroundColor: 'rgba(99,102,241,0.08)',
                     tension: 0.4,
                     fill: true,
                     pointBackgroundColor: '#6366f1',
                     pointRadius: 4,
+                    pointHoverRadius: 7,
                 }]
             },
             options: {
@@ -247,7 +301,7 @@
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { grid: { color: gridColor }, ticks: { color: textColor } },
-                    y: { grid: { color: gridColor }, ticks: { color: textColor } },
+                    y: { grid: { color: gridColor }, ticks: { color: textColor }, beginAtZero: true },
                 }
             }
         });
@@ -264,7 +318,7 @@
                     backgroundColor: 'rgba(99,102,241,0.7)',
                     borderColor: '#6366f1',
                     borderWidth: 1,
-                    borderRadius: 4,
+                    borderRadius: 5,
                 }]
             },
             options: {
@@ -272,7 +326,32 @@
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { grid: { color: gridColor }, ticks: { color: textColor } },
-                    y: { grid: { color: gridColor }, ticks: { color: textColor } },
+                    y: { grid: { color: gridColor }, ticks: { color: textColor }, beginAtZero: true },
+                }
+            }
+        });
+    }
+
+    if (document.getElementById('donutChart')) {
+        new Chart(document.getElementById('donutChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Positivos', 'Negativos'],
+                datasets: [{
+                    data: [statsPositive, statsNegative],
+                    backgroundColor: ['#22c55e', '#ef4444'],
+                    borderWidth: 0,
+                    hoverOffset: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: textColor, padding: 16, font: { size: 12 } }
+                    }
                 }
             }
         });
@@ -284,7 +363,7 @@
             data: {
                 datasets: [{
                     data: [positiveRate, 100 - positiveRate],
-                    backgroundColor: ['#6366f1', isDark ? '#2d2d3a' : '#e9ecef'],
+                    backgroundColor: ['#6366f1', isDark ? '#18181f' : '#ebebf5'],
                     borderWidth: 0,
                     circumference: 180,
                     rotation: 270,
@@ -292,26 +371,60 @@
             },
             options: {
                 responsive: false,
-                cutout: '75%',
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { enabled: false },
-                }
+                cutout: '78%',
+                plugins: { legend: { display: false }, tooltip: { enabled: false } }
             },
             plugins: [{
                 id: 'gaugeText',
                 afterDraw(chart) {
                     const { ctx, chartArea: { left, right, top, bottom } } = chart;
                     const cx = (left + right) / 2;
-                    const cy = (top + bottom) / 2 + 30;
+                    const cy = (top + bottom) / 2 + 28;
                     ctx.save();
-                    ctx.font = 'bold 22px Plus Jakarta Sans';
-                    ctx.fillStyle = isDark ? '#f8f9fa' : '#212529';
+                    ctx.font = 'bold 26px JetBrains Mono, monospace';
+                    ctx.fillStyle = isDark ? '#e2e8f0' : '#1a1a2e';
                     ctx.textAlign = 'center';
                     ctx.fillText(positiveRate.toFixed(1) + '%', cx, cy);
+                    ctx.font = '500 11px Plus Jakarta Sans, sans-serif';
+                    ctx.fillStyle = textColor;
+                    ctx.fillText('tasa positiva', cx, cy + 20);
                     ctx.restore();
                 }
             }]
+        });
+    }
+
+    if (document.getElementById('radarChart') && typeof modelMetrics !== 'undefined') {
+        new Chart(document.getElementById('radarChart'), {
+            type: 'radar',
+            data: {
+                labels: ['Accuracy', 'F1 Score', 'Precision', 'Recall'],
+                datasets: [{
+                    label: 'Modelo activo',
+                    data: [
+                        modelMetrics.accuracy * 100,
+                        modelMetrics.f1 * 100,
+                        modelMetrics.precision * 100,
+                        modelMetrics.recall * 100,
+                    ],
+                    backgroundColor: 'rgba(99,102,241,0.15)',
+                    borderColor: '#6366f1',
+                    pointBackgroundColor: '#6366f1',
+                    pointRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    r: {
+                        min: 0, max: 100,
+                        grid: { color: gridColor },
+                        pointLabels: { color: textColor, font: { size: 11 } },
+                        ticks: { color: textColor, stepSize: 25, backdropColor: 'transparent' },
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
         });
     }
 </script>

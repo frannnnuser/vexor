@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from sqlmodel import Session, select, func, case
+from sqlmodel import Session, select, func
 from dependencies import require_session
 from models import PredictionRecord, ModelRecord
 from datetime import datetime, timedelta
-
+from fastapi.responses import JSONResponse
+from datetime import date
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 templates = Jinja2Templates(directory="templates")
@@ -18,7 +19,6 @@ def get_dashboard_stats(session: Session) -> dict:
     ).one()
     negative = total - positive
     positive_rate = round((positive / total * 100), 2) if total > 0 else 0.0
-
     return {
         "total": total,
         "positive": positive,
@@ -32,12 +32,10 @@ def get_trend_data(session: Session) -> dict:
     records = session.exec(
         select(PredictionRecord).where(PredictionRecord.created_at >= since)
     ).all()
-
     trend: dict[str, int] = {}
     for record in records:
         day = record.created_at.strftime("%Y-%m-%d")
         trend[day] = trend.get(day, 0) + 1
-
     sorted_days = sorted(trend.keys())
     return {
         "labels": sorted_days,
@@ -110,3 +108,15 @@ async def dashboard(
             "confidence": confidence,
         },
     )
+    
+@router.get("/today-count")
+async def today_count() -> JSONResponse:
+    from main import get_db_session
+    today = datetime.utcnow().date()
+    with get_db_session() as session:
+        count = session.exec(
+            select(func.count(PredictionRecord.id)).where(
+                func.date(PredictionRecord.created_at) == today
+            )
+        ).one()
+    return JSONResponse(content={"count": count})

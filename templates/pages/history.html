@@ -7,34 +7,25 @@
 <div class="vx-card reveal mb-4">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
         <form method="GET" action="/history/" class="d-flex flex-wrap gap-2 align-items-center">
-            <input
-                type="text"
-                class="form-control form-control-sm"
-                name="search"
-                placeholder="Buscar..."
-                value="{{ search }}"
-                style="max-width: 200px;"
-            >
-            <select class="form-select form-select-sm" name="filter_prediction" style="max-width: 150px;">
-                <option value="">Todos</option>
-                <option value="1" {% if filter_prediction == 1 %}selected{% endif %}>Positivos</option>
-                <option value="0" {% if filter_prediction == 0 %}selected{% endif %}>Negativos</option>
+            <input type="text" class="form-control form-control-sm" name="search"
+                placeholder="Buscar cliente..." value="{{ search }}" style="max-width:200px;">
+            <select class="form-select form-select-sm" name="filter_prediction" style="max-width:160px;">
+                <option value="">Todos los clientes</option>
+                <option value="1" {% if filter_prediction == 1 %}selected{% endif %}>En riesgo</option>
+                <option value="0" {% if filter_prediction == 0 %}selected{% endif %}>Estables</option>
             </select>
-            <select class="form-select form-select-sm" name="page_size" style="max-width: 100px;">
+            <select class="form-select form-select-sm" name="page_size" style="max-width:90px;">
                 <option value="10" {% if page_size == 10 %}selected{% endif %}>10</option>
                 <option value="20" {% if page_size == 20 %}selected{% endif %}>20</option>
                 <option value="50" {% if page_size == 50 %}selected{% endif %}>50</option>
                 <option value="100" {% if page_size == 100 %}selected{% endif %}>100</option>
             </select>
-            <button type="submit" class="btn btn-sm btn-primary">
-                <i class="bi bi-search"></i>
-            </button>
+            <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
         </form>
-        <div class="d-flex gap-2">
-            <a href="/history/export{% if filter_prediction is not none %}?filter_prediction={{ filter_prediction }}{% endif %}" class="btn btn-sm btn-outline-success">
-                <i class="bi bi-download me-1"></i>Exportar CSV
-            </a>
-        </div>
+        <a href="/history/export{% if filter_prediction is not none %}?filter_prediction={{ filter_prediction }}{% endif %}"
+            class="btn btn-sm btn-outline-success">
+            <i class="bi bi-download me-1"></i>Exportar CSV
+        </a>
     </div>
 </div>
 
@@ -44,7 +35,7 @@
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Resultado</th>
+                    <th>Riesgo</th>
                     <th>Probabilidad</th>
                     <th>Modelo</th>
                     <th>Fecha</th>
@@ -58,29 +49,32 @@
                     <td><span class="font-mono text-muted">#{{ item.id }}</span></td>
                     <td>
                         {% if item.prediction == 1 %}
-                        <span class="badge bg-success">Positivo</span>
+                        <span class="badge bg-danger">En Riesgo</span>
                         {% else %}
-                        <span class="badge bg-danger">Negativo</span>
+                        <span class="badge bg-success">Estable</span>
                         {% endif %}
                     </td>
                     <td>
                         <div class="d-flex align-items-center gap-2">
-                            <div class="progress flex-grow-1" style="height: 4px; max-width: 60px;">
-                                <div class="progress-bar {% if item.prediction == 1 %}bg-success{% else %}bg-danger{% endif %}" style="width: {{ (item.probability * 100)|round|int }}%"></div>
+                            <div class="progress flex-grow-1" style="height:4px;max-width:60px;">
+                                <div class="progress-bar {% if item.prediction == 1 %}bg-danger{% else %}bg-success{% endif %}"
+                                    style="width:{{ (item.probability * 100)|round|int }}%"></div>
                             </div>
                             <small>{{ "%.1f"|format(item.probability * 100) }}%</small>
                         </div>
                     </td>
-                    <td><span class="font-mono">v{{ item.model_version }}</span></td>
+                    <td><span class="font-mono small">v{{ item.model_version }}</span></td>
                     <td><small class="text-muted">{{ item.created_at }}</small></td>
                     <td>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="showData({{ item.input_data | tojson | e }})">
+                        <button class="btn btn-sm btn-outline-secondary"
+                            onclick="showData({{ item.input_data | tojson | e }})">
                             <i class="bi bi-eye"></i>
                         </button>
                     </td>
                     {% if user.role == 'admin' %}
                     <td>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deletePrediction({{ item.id }}, this)">
+                        <button class="btn btn-sm btn-outline-danger"
+                            onclick="deletePrediction({{ item.id }}, this)">
                             <i class="bi bi-trash"></i>
                         </button>
                     </td>
@@ -131,7 +125,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h6 class="modal-title">Datos de entrada</h6>
+                <h6 class="modal-title fw-bold">Datos del cliente</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -155,11 +149,12 @@
         if (!confirm('Eliminar esta prediccion?')) return;
         btn.disabled = true;
         try {
-            const response = await fetch(`/history/${id}`, { method: 'DELETE' });
-            if (!response.ok) throw new Error('Error al eliminar');
+            const res = await fetch(`/history/${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Error al eliminar');
             btn.closest('tr').remove();
+            vxToast('Prediccion eliminada', 'success');
         } catch (err) {
-            alert(err.message);
+            vxToast(err.message, 'error');
             btn.disabled = false;
         }
     }

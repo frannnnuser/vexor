@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vexor — Iniciar Sesion</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%236366f1'/><text y='.9em' font-size='70' x='13'>⬡</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="/static/css/style.css" rel="stylesheet">
@@ -15,89 +16,97 @@
 
 <div class="auth-wrapper">
     <div class="auth-card">
-        <div class="auth-brand d-flex align-items-center justify-content-center gap-2 mb-4">
+
+        <div class="d-flex align-items-center justify-content-center gap-3 mb-4">
             <div class="brand-icon brand-icon-lg">
                 <i class="bi bi-hexagon-fill"></i>
             </div>
-            <span class="brand-name brand-name-lg">Vexor</span>
+            <div>
+                <div class="brand-name brand-name-lg">Vexor</div>
+                <div class="text-muted" style="font-size:0.75rem;margin-top:-4px;">Churn Prediction Platform</div>
+            </div>
         </div>
 
-        <h1 class="auth-title text-center mb-1">Bienvenido</h1>
-        <p class="auth-subtitle text-center mb-4">Ingresa tus credenciales para continuar</p>
+        <div class="text-center mb-4">
+            <h5 class="fw-bold mb-1">Bienvenido de vuelta</h5>
+            <p class="text-muted small mb-0">Detecta que clientes estan a punto de irse — antes de que sea tarde</p>
+        </div>
 
         {% if error %}
-        <div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
-            <i class="bi bi-exclamation-triangle-fill"></i>
+        <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" role="alert">
+            <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
             <span>{{ error }}</span>
         </div>
         {% endif %}
 
         <form method="POST" action="/auth/login" novalidate>
             <div class="mb-3">
-                <label for="email" class="form-label">Correo electronico</label>
+                <label for="email" class="form-label fw-500 small">Correo electronico</label>
                 <div class="input-group">
-                    <span class="input-group-text">
-                        <i class="bi bi-envelope-fill"></i>
-                    </span>
-                    <input
-                        type="email"
-                        class="form-control"
-                        id="email"
-                        name="email"
-                        placeholder="usuario@ejemplo.com"
-                        autocomplete="email"
-                        required
-                    >
+                    <span class="input-group-text"><i class="bi bi-envelope-fill"></i></span>
+                    <input type="email" class="form-control" id="email" name="email"
+                        placeholder="usuario@empresa.com" autocomplete="email" required>
                 </div>
             </div>
 
             <div class="mb-4">
-                <label for="password" class="form-label">Contraseña</label>
+                <label for="password" class="form-label fw-500 small">Contraseña</label>
                 <div class="input-group">
-                    <span class="input-group-text">
-                        <i class="bi bi-lock-fill"></i>
-                    </span>
-                    <input
-                        type="password"
-                        class="form-control"
-                        id="password"
-                        name="password"
-                        placeholder="••••••••"
-                        autocomplete="current-password"
-                        required
-                    >
+                    <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                    <input type="password" class="form-control" id="password" name="password"
+                        placeholder="••••••••" autocomplete="current-password" required>
                     <button class="btn btn-outline-secondary" type="button" id="togglePassword">
                         <i class="bi bi-eye-fill" id="toggleIcon"></i>
                     </button>
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100 btn-lg">
-                <i class="bi bi-box-arrow-in-right me-2"></i>
-                Iniciar Sesion
+            <button type="submit" class="btn btn-primary w-100 py-2">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesion
             </button>
         </form>
 
-        <div class="auth-footer text-center mt-4">
-            <small class="text-muted">Vexor v1.0 — Plataforma de Prediccion ML</small>
+        <div class="vx-divider mt-4"></div>
+
+        <div class="row g-2 mt-1">
+            <div class="col-4 text-center">
+                <div class="p-2 rounded" style="background:var(--vx-surface-2);">
+                    <i class="bi bi-cpu-fill text-primary d-block mb-1"></i>
+                    <small class="text-muted" style="font-size:0.65rem;">ML Engine</small>
+                </div>
+            </div>
+            <div class="col-4 text-center">
+                <div class="p-2 rounded" style="background:var(--vx-surface-2);">
+                    <i class="bi bi-shield-check text-success d-block mb-1"></i>
+                    <small class="text-muted" style="font-size:0.65rem;">Roles y Auditoría</small>
+                </div>
+            </div>
+            <div class="col-4 text-center">
+                <div class="p-2 rounded" style="background:var(--vx-surface-2);">
+                    <i class="bi bi-graph-up text-warning d-block mb-1"></i>
+                    <small class="text-muted" style="font-size:0.65rem;">Analytics</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <small class="text-muted">Vexor v1.0 — Churn Prediction Platform</small>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    const togglePassword = document.getElementById('togglePassword');
-    const passwordInput = document.getElementById('password');
-    const toggleIcon = document.getElementById('toggleIcon');
-
-    togglePassword.addEventListener('click', () => {
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
-        toggleIcon.className = type === 'password' ? 'bi bi-eye-fill' : 'bi bi-eye-slash-fill';
-    });
-
     const savedTheme = localStorage.getItem('vexor-theme') || 'dark';
     document.documentElement.setAttribute('data-bs-theme', savedTheme);
+
+    document.getElementById('togglePassword').addEventListener('click', () => {
+        const input = document.getElementById('password');
+        const icon = document.getElementById('toggleIcon');
+        const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+        input.setAttribute('type', type);
+        icon.className = type === 'password' ? 'bi bi-eye-fill' : 'bi bi-eye-slash-fill';
+    });
 </script>
 </body>
 </html>

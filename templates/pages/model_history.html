@@ -1,25 +1,31 @@
 {% extends "base.html" %}
 
-{% block title %}Vexor — Historial de Modelos{% endblock %}
+{% block title %}Vexor — Modelos{% endblock %}
 {% block page_title %}Historial de Modelos{% endblock %}
 
 {% block content %}
-<div class="vx-card reveal">
-    <div class="vx-card-header mb-4 d-flex align-items-center justify-content-between">
-        <div>
-            <h5 class="mb-0">Modelos Entrenados</h5>
-            <small class="text-muted">Comparativa de versiones y metricas</small>
-        </div>
-        <a href="/training/" class="btn btn-sm btn-primary">
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div class="reveal">
+        <h5 class="fw-bold mb-0">Modelos Entrenados</h5>
+        <small class="text-muted">Gestiona y compara versiones del modelo de churn</small>
+    </div>
+    <div class="d-flex gap-2 reveal">
+        <button class="btn btn-outline-primary btn-sm" id="compareBtn" disabled>
+            <i class="bi bi-bar-chart-line me-1"></i>Comparar seleccionados
+        </button>
+        <a href="/training/" class="btn btn-primary btn-sm">
             <i class="bi bi-plus-lg me-1"></i>Nuevo Modelo
         </a>
     </div>
+</div>
 
-    {% if models %}
+{% if models %}
+<div class="vx-card reveal mb-4">
     <div class="table-responsive">
         <table class="table vx-table mb-0">
             <thead>
                 <tr>
+                    <th><input type="checkbox" id="selectAll" class="form-check-input"></th>
                     <th>Version</th>
                     <th>Estado</th>
                     <th>Accuracy</th>
@@ -28,61 +34,239 @@
                     <th>Recall</th>
                     <th>Columna Objetivo</th>
                     <th>Entrenado</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
                 {% for model in models %}
-                <tr {% if model.is_active %}class="table-active-row"{% endif %}>
+                <tr {% if model.is_active %}class="table-active-row"{% endif %} data-model-id="{{ model.id }}">
                     <td>
-                        <span class="font-mono">v{{ model.version }}</span>
-                        {% if model.is_active %}
-                        <span class="badge bg-success ms-1">Activo</span>
-                        {% endif %}
+                        <input type="checkbox" class="form-check-input model-check"
+                            value="{{ model.id }}"
+                            data-accuracy="{{ model.accuracy }}"
+                            data-f1="{{ model.f1_score }}"
+                            data-precision="{{ model.precision }}"
+                            data-recall="{{ model.recall }}"
+                            data-version="{{ model.version }}"
+                        >
                     </td>
+                    <td><span class="font-mono">v{{ model.version }}</span></td>
                     <td>
                         {% if model.is_active %}
-                        <i class="bi bi-circle-fill text-success small"></i>
+                        <span class="badge bg-success">Activo</span>
                         {% else %}
-                        <i class="bi bi-circle text-muted small"></i>
+                        <span class="badge bg-secondary">Inactivo</span>
                         {% endif %}
                     </td>
                     <td>
                         <div class="d-flex align-items-center gap-2">
-                            <div class="progress flex-grow-1" style="height: 4px; max-width: 50px;">
-                                <div class="progress-bar bg-primary" style="width: {{ (model.accuracy * 100)|round|int }}%"></div>
+                            <div class="progress flex-grow-1" style="height:4px;max-width:50px;">
+                                <div class="progress-bar bg-primary" style="width:{{ (model.accuracy*100)|round|int }}%"></div>
                             </div>
-                            <small>{{ "%.2f"|format(model.accuracy * 100) }}%</small>
+                            <small class="font-mono">{{ "%.2f"|format(model.accuracy*100) }}%</small>
                         </div>
                     </td>
                     <td>
                         <div class="d-flex align-items-center gap-2">
-                            <div class="progress flex-grow-1" style="height: 4px; max-width: 50px;">
-                                <div class="progress-bar bg-success" style="width: {{ (model.f1_score * 100)|round|int }}%"></div>
+                            <div class="progress flex-grow-1" style="height:4px;max-width:50px;">
+                                <div class="progress-bar bg-success" style="width:{{ (model.f1_score*100)|round|int }}%"></div>
                             </div>
-                            <small>{{ "%.2f"|format(model.f1_score * 100) }}%</small>
+                            <small class="font-mono">{{ "%.2f"|format(model.f1_score*100) }}%</small>
                         </div>
                     </td>
-                    <td><small>{{ "%.2f"|format(model.precision * 100) }}%</small></td>
-                    <td><small>{{ "%.2f"|format(model.recall * 100) }}%</small></td>
-                    <td><span class="font-mono small">{{ model.target_column }}</span></td>
+                    <td><small class="font-mono">{{ "%.2f"|format(model.precision*100) }}%</small></td>
+                    <td><small class="font-mono">{{ "%.2f"|format(model.recall*100) }}%</small></td>
+                    <td><span class="font-mono small text-muted">{{ model.target_column }}</span></td>
                     <td><small class="text-muted">{{ model.trained_at }}</small></td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            {% if not model.is_active %}
+                            <button class="btn btn-sm btn-outline-success activate-btn" data-id="{{ model.id }}" title="Activar modelo">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delete-model-btn" data-id="{{ model.id }}" title="Eliminar modelo">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            {% else %}
+                            <span class="text-muted small px-2">En uso</span>
+                            {% endif %}
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-    {% else %}
-    <div class="text-center py-5 text-muted">
-        <i class="bi bi-archive fs-2 d-block mb-2"></i>
-        <p>No hay modelos entrenados aun.</p>
-        <a href="/training/" class="btn btn-primary btn-sm">Entrenar primer modelo</a>
-    </div>
-    {% endif %}
 </div>
+
+<div class="vx-card reveal" id="compareCard" style="display:none;">
+    <div class="vx-card-header mb-4 d-flex align-items-center justify-content-between">
+        <div>
+            <h6 class="fw-bold mb-0">Comparador de Modelos</h6>
+            <small class="text-muted">Selecciona 2 modelos para comparar</small>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary" id="closeCompare">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <div class="row g-4">
+        <div class="col-12 col-lg-7">
+            <canvas id="compareChart" height="120"></canvas>
+        </div>
+        <div class="col-12 col-lg-5">
+            <div class="table-responsive">
+                <table class="table vx-table mb-0" id="compareTable"></table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="vx-card reveal text-center py-5">
+    <div class="vx-empty-icon mb-3"><i class="bi bi-archive"></i></div>
+    <h5 class="fw-bold">Sin modelos entrenados</h5>
+    <p class="text-muted">Entrena el primer modelo para verlo aqui.</p>
+    <a href="/training/" class="btn btn-primary btn-sm mt-2">
+        <i class="bi bi-cpu-fill me-2"></i>Entrenar modelo
+    </a>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
-</script>
-{% endblock %}
+    document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale').forEach(el => el.classList.add('visible'));
+
+    const selectAll = document.getElementById('selectAll');
+    const compareBtn = document.getElementById('compareBtn');
+    const compareCard = document.getElementById('compareCard');
+    let compareChart = null;
+
+    function getChecked() {
+        return [...document.querySelectorAll('.model-check:checked')];
+    }
+
+    document.querySelectorAll('.model-check').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const checked = getChecked();
+            compareBtn.disabled = checked.length !== 2;
+        });
+    });
+
+    if (selectAll) {
+        selectAll.addEventListener('change', () => {
+            document.querySelectorAll('.model-check').forEach(cb => cb.checked = selectAll.checked);
+            compareBtn.disabled = getChecked().length !== 2;
+        });
+    }
+
+    compareBtn?.addEventListener('click', () => {
+        const checked = getChecked();
+        if (checked.length !== 2) return;
+
+        const models = checked.map(cb => ({
+            version: cb.dataset.version,
+            accuracy: parseFloat(cb.dataset.accuracy) * 100,
+            f1: parseFloat(cb.dataset.f1) * 100,
+            precision: parseFloat(cb.dataset.precision) * 100,
+            recall: parseFloat(cb.dataset.recall) * 100,
+        }));
+
+        compareCard.style.display = 'block';
+        compareCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+        const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+        const textColor = isDark ? '#525270' : '#9090b0';
+
+        if (compareChart) compareChart.destroy();
+
+        compareChart = new Chart(document.getElementById('compareChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Accuracy', 'F1 Score', 'Precision', 'Recall'],
+                datasets: [
+                    {
+                        label: `v${models[0].version}`,
+                        data: [models[0].accuracy, models[0].f1, models[0].precision, models[0].recall],
+                        backgroundColor: 'rgba(99,102,241,0.8)',
+                        borderRadius: 5,
+                    },
+                    {
+                        label: `v${models[1].version}`,
+                        data: [models[1].accuracy, models[1].f1, models[1].precision, models[1].recall],
+                        backgroundColor: 'rgba(34,197,94,0.8)',
+                        borderRadius: 5,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { grid: { color: gridColor }, ticks: { color: textColor } },
+                    y: { grid: { color: gridColor }, ticks: { color: textColor }, min: 0, max: 100 },
+                },
+                plugins: {
+                    legend: { labels: { color: textColor } }
+                }
+            }
+        });
+
+        const metrics = ['Accuracy', 'F1 Score', 'Precision', 'Recall'];
+        const vals = [
+            [models[0].accuracy, models[0].f1, models[0].precision, models[0].recall],
+            [models[1].accuracy, models[1].f1, models[1].precision, models[1].recall],
+        ];
+
+        const table = document.getElementById('compareTable');
+        table.innerHTML = `
+            <thead><tr>
+                <th>Metrica</th>
+                <th>v${models[0].version}</th>
+                <th>v${models[1].version}</th>
+            </tr></thead>
+            <tbody>
+                ${metrics.map((m, i) => {
+                    const a = vals[0][i].toFixed(2);
+                    const b = vals[1][i].toFixed(2);
+                    const aWins = parseFloat(a) > parseFloat(b);
+                    const bWins = parseFloat(b) > parseFloat(a);
+                    return `<tr>
+                        <td class="text-muted small">${m}</td>
+                        <td class="${aWins ? 'compare-winner' : ''}">${a}%</td>
+                        <td class="${bWins ? 'compare-winner' : ''}">${b}%</td>
+                    </tr>`;
+                }).join('')}
+            </tbody>
+        `;
+    });
+
+    document.getElementById('closeCompare')?.addEventListener('click', () => {
+        compareCard.style.display = 'none';
+    });
+
+    document.querySelectorAll('.activate-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const id = btn.dataset.id;
+            btn.disabled = true;
+            try {
+                const res = await fetch(`/training/models/${id}/activate`, { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail);
+                vxToast(`Modelo v${data.version} activado correctamente`, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } catch (err) {
+                vxToast(err.message, 'error');
+                btn.disabled = false;
+            }
+        });
+    });
+
+    document.querySelectorAll('.delete-model-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            if (!confirm('Eliminar este modelo? Esta accion no se puede deshacer.')) return;
+            const id = btn.dataset.id;
+            btn.disabled = true;
+            try {
+                const res = await fetch(`/training/models/${id}`, { method: 'DELETE' });
+                const data =

@@ -6,18 +6,14 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-12 col-md-6 text-center py-5">
-        <div class="error-code mb-3">{{ code }}</div>
-        <h4 class="mb-2">{{ message }}</h4>
-        <p class="text-muted mb-4">
-            {% if code == 404 %}
-            La pagina que buscas no existe o fue movida.
-            {% elif code == 403 %}
-            No tienes permisos para acceder a este recurso.
-            {% else %}
-            Ocurrio un error inesperado. Intenta de nuevo.
-            {% endif %}
+        <div class="error-code mb-3 reveal">{{ code }}</div>
+        <h4 class="fw-bold mb-2 reveal reveal-delay-1">{{ message }}</h4>
+        <p class="text-muted mb-4 reveal reveal-delay-2">
+            {% if code == 404 %}La pagina que buscas no existe o fue movida.
+            {% elif code == 403 %}No tienes permisos para acceder a este recurso.
+            {% else %}Ocurrio un error inesperado. Intenta de nuevo.{% endif %}
         </p>
-        <div class="d-flex gap-2 justify-content-center">
+        <div class="d-flex gap-2 justify-content-center reveal reveal-delay-3">
             <a href="/dashboard" class="btn btn-primary">
                 <i class="bi bi-grid-1x2-fill me-2"></i>Ir al Dashboard
             </a>
@@ -31,6 +27,6 @@
 
 {% block extra_js %}
 <script>
-    document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+    document.querySelectorAll('.reveal, .reveal-delay-1, .reveal-delay-2, .reveal-delay-3').forEach(el => el.classList.add('visible'));
 </script>
 {% endblock %}

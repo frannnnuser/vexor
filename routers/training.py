@@ -97,8 +97,7 @@ async def detect_columns(
     df = await read_dataframe(file)
     if df.empty:
         raise HTTPException(status_code=400, detail="El archivo no contiene datos")
-    columns = df.columns.tolist()
-    return JSONResponse(content={"columns": columns})
+    return JSONResponse(content={"columns": df.columns.tolist()})
 
 
 @router.post("/train", response_class=JSONResponse)
@@ -119,7 +118,6 @@ async def train_model(
 
     if not target_column:
         raise HTTPException(status_code=400, detail="Columna objetivo requerida")
-
     if target_column not in df.columns:
         raise HTTPException(status_code=400, detail="Columna objetivo no encontrada en el dataset")
 
@@ -132,15 +130,13 @@ async def train_model(
 
     loop = asyncio.get_event_loop()
     try:
-        metrics = await loop.run_in_executor(
-            None, engine.train, df, target_column
-        )
+        metrics = await loop.run_in_executor(None, engine.train, df, target_column)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error durante el entrenamiento: {str(e)}")
 
     from main import get_db_session
     with get_db_session() as session:
-        record = save_model_record(
+        save_model_record(
             session,
             metrics,
             target_column,
@@ -191,3 +187,38 @@ async def model_history_page(
         "pages/model_history.html",
         {"request": request, "user": current_user, "models": models},
     )
+
+
+@router.post("/models/{model_id}/activate", response_class=JSONResponse)
+async def activate_model(
+    model_id: int,
+    current_user: dict = Depends(require_admin_session),
+) -> JSONResponse:
+    from main import get_db_session
+    with get_db_session() as session:
+        record = session.get(ModelRecord, model_id)
+        if not record:
+            raise HTTPException(status_code=404, detail="Modelo no encontrado")
+        deactivate_all_models(session)
+        record.is_active = True
+        session.add(record)
+        session.commit()
+        engine.load()
+    return JSONResponse(content={"message": "Modelo activado correctamente", "version": record.version})
+
+
+@router.delete("/models/{model_id}", response_class=JSONResponse)
+async def delete_model(
+    model_id: int,
+    current_user: dict = Depends(require_admin_session),
+) -> JSONResponse:
+    from main import get_db_session
+    with get_db_session() as session:
+        record = session.get(ModelRecord, model_id)
+        if not record:
+            raise HTTPException(status_code=404, detail="Modelo no encontrado")
+        if record.is_active:
+            raise HTTPException(status_code=400, detail="No puedes eliminar el modelo activo")
+        session.delete(record)
+        session.commit()
+    return JSONResponse(content={"message": "Modelo eliminado correctamente"})

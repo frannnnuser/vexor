@@ -1,31 +1,24 @@
 {% extends "base.html" %}
 
-{% block title %}Vexor — Audit Log{% endblock %}
-{% block page_title %}Audit Log{% endblock %}
+{% block title %}Vexor — Auditoria{% endblock %}
+{% block page_title %}Auditoria{% endblock %}
 
 {% block content %}
 <div class="vx-card reveal mb-4">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
         <form method="GET" action="/audit/" class="d-flex flex-wrap gap-2 align-items-center">
-            <input
-                type="text"
-                class="form-control form-control-sm"
-                name="search"
-                placeholder="Buscar..."
-                value="{{ search }}"
-                style="max-width: 200px;"
-            >
-            <select class="form-select form-select-sm" name="filter_action" style="max-width: 180px;">
+            <input type="text" class="form-control form-control-sm" name="search"
+                placeholder="Buscar..." value="{{ search }}" style="max-width:200px;">
+            <select class="form-select form-select-sm" name="filter_action" style="max-width:190px;">
                 <option value="">Todas las acciones</option>
                 {% for action in actions %}
                 <option value="{{ action }}" {% if filter_action == action %}selected{% endif %}>{{ action }}</option>
                 {% endfor %}
             </select>
-            <button type="submit" class="btn btn-sm btn-primary">
-                <i class="bi bi-search"></i>
-            </button>
+            <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
         </form>
-        <a href="/audit/export{% if filter_action %}?filter_action={{ filter_action }}{% endif %}" class="btn btn-sm btn-outline-success">
+        <a href="/audit/export{% if filter_action %}?filter_action={{ filter_action }}{% endif %}"
+            class="btn btn-sm btn-outline-success">
             <i class="bi bi-download me-1"></i>Exportar CSV
         </a>
     </div>
@@ -49,10 +42,8 @@
                 <tr>
                     <td><span class="font-mono text-muted">#{{ item.id }}</span></td>
                     <td>
-                        <div>
-                            <small class="d-block">{{ item.email }}</small>
-                            <span class="font-mono text-muted" style="font-size: 0.7rem;">{{ item.user_id[:8] }}...</span>
-                        </div>
+                        <small class="d-block fw-500">{{ item.email }}</small>
+                        <span class="font-mono text-muted" style="font-size:.68rem;">{{ item.user_id[:8] }}...</span>
                     </td>
                     <td>
                         <span class="badge
@@ -60,8 +51,7 @@
                             {% elif 'train' in item.action %}bg-warning
                             {% elif 'delete' in item.action %}bg-danger
                             {% elif 'predict' in item.action %}bg-success
-                            {% else %}bg-secondary
-                            {% endif %}">
+                            {% else %}bg-secondary{% endif %}">
                             {{ item.action }}
                         </span>
                     </td>
